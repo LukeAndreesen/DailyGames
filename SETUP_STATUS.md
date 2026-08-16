@@ -17,6 +17,9 @@ This file tracks external setup only. Never add phone numbers, database password
 - [x] Project-scoped Codex MCP entry named `supabase-dailygames` configured.
 - [x] Supabase MCP OAuth authorization completed for `supabase-dailygames`.
 - [x] Supabase agent skill available in Codex.
+- [x] Vercel CLI authenticated as `landreesen-1259` with access to the `Luke's projects` team.
+- [x] Vercel MCP OAuth authorization completed.
+- [x] Vercel agent plugin installed in Codex.
 
 ## Next: Supabase
 
