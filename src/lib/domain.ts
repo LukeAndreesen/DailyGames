@@ -81,5 +81,5 @@ export type AppData = {
   players: PublicPlayer[];
   games: Game[];
   results: Result[];
-  isDemo: boolean;
+  isPreview: boolean;
 };

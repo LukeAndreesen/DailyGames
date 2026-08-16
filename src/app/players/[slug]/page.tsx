@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { SelectableTrendChart, type TrendSeries } from "@/components/trend-charts";
-import { DemoBanner, Metric, SectionHeading } from "@/components/ui";
+import { Metric, PreviewBanner, SectionHeading } from "@/components/ui";
 import { loadAppData } from "@/lib/data";
 import { getGameStandings, getOverallStandings } from "@/lib/scoring";
 
@@ -43,7 +43,7 @@ export default async function PlayerPage({ params }: Props) {
 
   return (
     <div className="space-y-5 pb-4">
-      <DemoBanner isDemo={data.isDemo} />
+      <PreviewBanner isPreview={data.isPreview} />
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand)]">Player profile</p>
         <h1 className="text-3xl font-black tracking-tight">{player.displayName}</h1>

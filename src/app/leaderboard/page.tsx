@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { OverallLeaderboardList } from "@/components/leaderboard-list";
-import { DemoBanner, Metric, SectionHeading } from "@/components/ui";
+import { Metric, PreviewBanner, SectionHeading } from "@/components/ui";
 import { loadAppData } from "@/lib/data";
 import { getOverallStandings } from "@/lib/scoring";
 
@@ -13,7 +13,7 @@ export default async function LeaderboardPage() {
   const trackedDays = new Set(data.results.map((result) => result.gameDate)).size;
   return (
     <div className="space-y-5 pb-4">
-      <DemoBanner isDemo={data.isDemo} />
+      <PreviewBanner isPreview={data.isPreview} />
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand)]">All time</p>
         <h1 className="text-3xl font-black tracking-tight">Leaderboard</h1>

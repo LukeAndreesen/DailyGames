@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SelectableTrendChart, type TrendSeries } from "@/components/trend-charts";
-import { DemoBanner, Metric, RankMark, SectionHeading } from "@/components/ui";
+import { Metric, PreviewBanner, RankMark, SectionHeading } from "@/components/ui";
 import { loadAppData } from "@/lib/data";
 import { formatLongDate } from "@/lib/date";
 import { buildRankedResults, getGameStandings } from "@/lib/scoring";
@@ -40,7 +40,7 @@ export default async function GamePage({ params }: Props) {
 
   return (
     <div className="space-y-5 pb-4">
-      <DemoBanner isDemo={data.isDemo} />
+      <PreviewBanner isPreview={data.isPreview} />
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand)]">Game history</p>
         <h1 className="text-3xl font-black tracking-tight">{game.displayName}</h1>

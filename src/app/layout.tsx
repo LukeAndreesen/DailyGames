@@ -3,6 +3,7 @@ import "@/app/globals.css";
 import { BottomNav } from "@/components/bottom-nav";
 import { LiveResultsProvider } from "@/components/live-results-provider";
 import { SiteHeader } from "@/components/site-header";
+import { getScoreboardDataMode } from "@/lib/data-mode";
 
 export const metadata: Metadata = {
   title: {
@@ -23,10 +24,11 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const live = getScoreboardDataMode() === "live";
   return (
     <html lang="en">
       <body>
-        <LiveResultsProvider>
+        <LiveResultsProvider enabled={live}>
           <div className="safe-shell">
             <SiteHeader />
             <main>{children}</main>

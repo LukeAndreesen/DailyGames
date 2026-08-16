@@ -1,6 +1,8 @@
 import type { AppData, Game, PublicPlayer, Result } from "@/lib/domain";
 import { getSql, hasDatabase } from "@/lib/db";
-import { sampleData } from "@/lib/sample-data";
+import { getScoreboardDataMode } from "@/lib/data-mode";
+import { dateInTimeZone } from "@/lib/date";
+import { createPreviewData } from "@/lib/sample-data";
 
 type PlayerRow = {
   id: string;
@@ -30,10 +32,21 @@ type ResultRow = {
 };
 
 export async function loadAppData(): Promise<AppData> {
-  if (!hasDatabase()) return sampleData;
+  const mode = getScoreboardDataMode();
+  const today = dateInTimeZone(
+    new Date(),
+    process.env.APP_TIMEZONE || "America/Chicago",
+  );
+
+  if (!hasDatabase()) {
+    if (mode === "live") {
+      throw new Error("DATABASE_URL is required when SCOREBOARD_DATA_MODE is live.");
+    }
+    return createPreviewData({ today });
+  }
 
   const sql = getSql();
-  const [playerRows, gameRows, resultRows] = await Promise.all([
+  const [playerRows, gameRows] = await Promise.all([
     sql<PlayerRow[]>`
       select id, slug, display_name, display_order, active
       from public.players
@@ -44,11 +57,6 @@ export async function loadAppData(): Promise<AppData> {
       select id, slug, display_name, max_score, higher_is_better, display_order
       from public.games
       order by display_order
-    `,
-    sql<ResultRow[]>`
-      select id, player_id, game_id, game_date, score, details, received_at
-      from public.results
-      order by game_date, received_at
     `,
   ]);
 
@@ -67,6 +75,16 @@ export async function loadAppData(): Promise<AppData> {
     higherIsBetter: row.higher_is_better,
     displayOrder: row.display_order,
   }));
+
+  if (mode === "preview") {
+    return createPreviewData({ players, games, today });
+  }
+
+  const resultRows = await sql<ResultRow[]>`
+    select id, player_id, game_id, game_date, score, details, received_at
+    from public.results
+    order by game_date, received_at
+  `;
   const results: Result[] = resultRows.map((row) => ({
     id: row.id,
     playerId: row.player_id,
@@ -83,5 +101,5 @@ export async function loadAppData(): Promise<AppData> {
         : String(row.received_at),
   }));
 
-  return { players, games, results, isDemo: false };
+  return { players, games, results, isPreview: false };
 }

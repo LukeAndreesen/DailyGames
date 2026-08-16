@@ -1,11 +1,12 @@
 import { ChevronRight, Trophy } from "lucide-react";
 import Link from "next/link";
 
-export function DemoBanner({ isDemo }: { isDemo: boolean }) {
-  if (!isDemo) return null;
+export function PreviewBanner({ isPreview }: { isPreview: boolean }) {
+  if (!isPreview) return null;
   return (
     <div className="mb-4 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm">
-      <strong>Demo data.</strong> Connect Supabase and add the player mapping to show live scores.
+      <strong>Preview only.</strong> Every score shown is synthetic and no preview results are
+      stored in Supabase.
     </div>
   );
 }

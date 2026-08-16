@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { DemoBanner, RankMark } from "@/components/ui";
+import { PreviewBanner, RankMark } from "@/components/ui";
 import { loadAppData } from "@/lib/data";
 import { getOverallStandings } from "@/lib/scoring";
 
@@ -18,7 +18,7 @@ export default async function PlayersPage() {
   );
   return (
     <div className="space-y-5 pb-4">
-      <DemoBanner isDemo={data.isDemo} />
+      <PreviewBanner isPreview={data.isPreview} />
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand)]">The group</p>
         <h1 className="text-3xl font-black tracking-tight">Players</h1>

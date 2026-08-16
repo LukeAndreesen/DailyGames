@@ -2,7 +2,7 @@ import type { AppData } from "@/lib/domain";
 import { DateNavigator } from "@/components/date-navigator";
 import { GameCard } from "@/components/game-card";
 import { DailyLeaderboardList, OverallLeaderboardList } from "@/components/leaderboard-list";
-import { DemoBanner, EmptyState, SectionHeading } from "@/components/ui";
+import { EmptyState, PreviewBanner, SectionHeading } from "@/components/ui";
 import { buildRankedResults, getDailyStandings, getOverallStandings } from "@/lib/scoring";
 
 export function DailyDashboard({ data, date, today }: { data: AppData; date: string; today: string }) {
@@ -13,7 +13,7 @@ export function DailyDashboard({ data, date, today }: { data: AppData; date: str
 
   return (
     <div className="space-y-5 pb-4">
-      <DemoBanner isDemo={data.isDemo} />
+      <PreviewBanner isPreview={data.isPreview} />
       <DateNavigator date={date} today={today} />
 
       <section className="card overflow-hidden p-4">

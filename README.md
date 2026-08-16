@@ -35,16 +35,16 @@ Only Google Apps Script is updated. The iPhone automations keep their current UR
 - Supabase Realtime refresh plus mobile Safari focus recovery.
 - Google Apps Script audit, forwarding, and retry relay.
 - Player seed and historical CSV import scripts.
-- Demo data when Supabase is not configured.
+- An explicit preview mode that generates synthetic scores in memory, even when Supabase is configured.
 
-## Run the demo locally
+## Run the preview locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Without `.env.local`, the app intentionally displays fictional demo data.
+Open [http://localhost:3000](http://localhost:3000). Preview is the safe default: the app uses configured player/game records when available, generates seven days of synthetic scores in memory, and never writes those scores to Supabase.
 
 ## External setup checklist
 
@@ -71,6 +71,7 @@ NEXT_PUBLIC_SUPABASE_URL        Supabase project URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  Supabase publishable key
 DATABASE_URL                    Supabase transaction-pooler connection string
 INGEST_SECRET                   A random secret of at least 32 characters
+SCOREBOARD_DATA_MODE            preview until launch; live after cutover
 APP_TIMEZONE                    America/Chicago
 NEXT_PUBLIC_SITE_URL            http://localhost:3000 initially
 ```
@@ -122,7 +123,9 @@ The local mapping file is gitignored. Phone numbers go only into `private.player
 npm run dev
 ```
 
-Confirm the yellow demo banner is gone. To test ingestion, POST a real share with the same `INGEST_SECRET` using an event UUID and mapped phone number.
+Keep `SCOREBOARD_DATA_MODE=preview` while reviewing the UI. The amber preview banner and Preview status pill must remain visible, even though the app is connected to Supabase.
+
+To test ingestion, POST a deliberately synthetic share with the same `INGEST_SECRET` using an event UUID and mapped phone number, then remove that test result and ingest event before launch.
 
 ### 5. Push to GitHub and deploy on Vercel
 
@@ -169,6 +172,20 @@ npm run import:sheet -- /absolute/path/to/scores.csv
 ```
 
 Rows are processed chronologically so the first valid score for each player/game/date remains authoritative.
+
+Do not import the current Sheet while it contains mock rows. Treat all pre-launch Sheet scores as synthetic.
+
+## Switch from preview to live
+
+Perform this cutover immediately before the scoreboard begins collecting real results:
+
+1. Clear every mock result row from the Google Sheet while preserving its header row and Apps Script configuration.
+2. Confirm `public.results` and `private.ingest_events` are empty in Supabase.
+3. Set `SCOREBOARD_DATA_MODE=live` in Vercel Production and redeploy.
+4. Confirm the amber preview banner is gone and the header says Live.
+5. Send the first real result and verify it appears once in the Sheet, Supabase, and the website.
+
+To return to a safe preview at any point, set `SCOREBOARD_DATA_MODE=preview` and redeploy. Preview scores are generated at request time, so there are no mock rows to delete from Supabase.
 
 ## Quality commands
 

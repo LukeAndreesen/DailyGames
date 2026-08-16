@@ -4,11 +4,18 @@ import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-export function LiveResultsProvider({ children }: { children: React.ReactNode }) {
+export function LiveResultsProvider({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode;
+  enabled: boolean;
+}) {
   const router = useRouter();
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     if (!url || !key) return;
@@ -40,7 +47,7 @@ export function LiveResultsProvider({ children }: { children: React.ReactNode })
       if (channel) void supabase.removeChannel(channel);
       channel = null;
     };
-  }, [router]);
+  }, [enabled, router]);
 
   return children;
 }
