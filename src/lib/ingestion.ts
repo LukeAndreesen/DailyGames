@@ -177,7 +177,7 @@ export async function ingestScore(input: IngestRequest): Promise<IngestOutcome> 
         ${gameId}::uuid,
         ${parsed.gameDate}::date,
         ${parsed.score},
-        ${JSON.stringify(parsed.details)}::jsonb,
+        ${transaction.json(parsed.details)},
         ${input.receivedAt}::timestamptz
       )
       on conflict (player_id, game_id, game_date) do nothing
