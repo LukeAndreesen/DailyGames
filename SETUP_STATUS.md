@@ -15,10 +15,11 @@ This file tracks external setup only. Never add phone numbers, database password
 - [x] Google Apps Script relay code updated by the owner.
 - [x] iPhone Shortcuts left unchanged and still pointed at Google Apps Script.
 - [x] Project-scoped Codex MCP entry named `supabase-dailygames` configured.
+- [x] Supabase MCP OAuth authorization completed for `supabase-dailygames`.
+- [x] Supabase agent skill available in Codex.
 
 ## Next: Supabase
 
-- [ ] Complete OAuth authorization for the `supabase-dailygames` MCP connection, or use the Supabase CLI/dashboard instead.
 - [ ] Apply `supabase/migrations/20260816214043_initial_scoreboard_schema.sql` to the project.
 - [ ] Seed the seven players and their private phone mappings.
 - [ ] Add the Supabase publishable key to local `.env.local` and Vercel.
