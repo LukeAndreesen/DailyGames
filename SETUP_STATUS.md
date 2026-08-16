@@ -30,7 +30,8 @@ This file tracks external setup only. Never add phone numbers, database password
 - [x] Verify table counts, RLS, Realtime publication, and the public/private API boundary.
 - [x] Add the Supabase URL and publishable key to Vercel.
 - [x] Add the Supabase transaction-pooler `DATABASE_URL` to Vercel Production and Preview as a sensitive variable.
-- [ ] Run a live ingestion and browser Realtime verification.
+- [x] Run live ingestion through Apps Script and verify normalized Supabase results.
+- [ ] Confirm an already-open browser updates through Supabase Realtime without a manual refresh.
 
 ## Next: Vercel
 
@@ -45,18 +46,18 @@ This file tracks external setup only. Never add phone numbers, database password
 
 ## Next: Apps Script and end-to-end test
 
-- [ ] Set `INGEST_URL` to `https://<production-domain>/api/ingest` in Apps Script Properties.
-- [ ] Set `INGEST_SECRET` in Apps Script Properties to match Vercel.
-- [ ] Confirm `SHEET_NAME` matches the raw audit tab.
-- [ ] Keep `SCOREBOARD_DATA_MODE=preview` during pre-launch review.
-- [ ] Clear all existing mock Sheet rows immediately before launch; do not import them.
-- [ ] Confirm `public.results` and `private.ingest_events` are still empty.
-- [ ] Set `SCOREBOARD_DATA_MODE=live` in Vercel Production and redeploy.
-- [ ] Redeploy the existing Apps Script web app as a new version without changing its public `/exec` URL.
-- [ ] Run `setupScoreboardSheet` once if the audit/status columns are not already present.
-- [ ] Add a 15-minute time-driven trigger for `retryFailedRows`.
-- [ ] Send one real supported game result through iMessage.
-- [ ] Confirm the Sheet row is saved, Supabase receives one normalized result, and the open website updates live.
+- [x] Set `INGEST_URL` to `https://daily-games-m11g.vercel.app/api/ingest` in Apps Script Properties.
+- [x] Set `INGEST_SECRET` in Apps Script Properties to match Vercel.
+- [x] Confirm `SHEET_NAME` matches the `Score Events` raw audit tab.
+- [x] Keep `SCOREBOARD_DATA_MODE=preview` during pre-launch review.
+- [x] Start the live audit tab without mock rows.
+- [x] Confirm `public.results` and `private.ingest_events` were empty before launch.
+- [x] Set `SCOREBOARD_DATA_MODE=live` in Vercel Production and redeploy.
+- [x] Redeploy the existing Apps Script web app as a new version without changing its public `/exec` URL.
+- [x] Run `setupScoreboardSheet` once to create the audit/status columns.
+- [x] Add a 15-minute time-driven trigger for `retryFailedRows`.
+- [x] Send real supported MapTap results through iMessage.
+- [x] Confirm two Sheet rows were forwarded, Supabase stored exactly two normalized results, and both website pages render them.
 
 ## Optional after launch
 
