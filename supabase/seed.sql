@@ -1,0 +1,4 @@
+-- Games are seeded by the initial migration.
+-- Players and private phone mappings are intentionally not committed here.
+-- Copy config/players.example.json to config/players.local.json and run:
+-- npm run seed:players
