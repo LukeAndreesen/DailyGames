@@ -23,15 +23,20 @@ This file tracks external setup only. Never add phone numbers, database password
 
 ## Next: Supabase
 
-- [ ] Apply `supabase/migrations/20260816214043_initial_scoreboard_schema.sql` to the project.
-- [ ] Seed the seven players and their private phone mappings.
-- [ ] Add the Supabase publishable key to local `.env.local` and Vercel.
+- [x] Apply `supabase/migrations/20260816225618_initial_scoreboard_schema.sql` to the project.
+- [x] Seed the seven players and their private phone mappings.
+- [x] Add the Supabase publishable key to local `.env.local`.
+- [x] Verify table counts, RLS, Realtime publication, and the public/private API boundary.
+- [ ] Add the Supabase URL and publishable key to Vercel.
 - [ ] Add the Supabase transaction-pooler `DATABASE_URL` to local `.env.local` and Vercel.
-- [ ] Run a live database/privacy/realtime verification.
+- [ ] Run a live ingestion and browser Realtime verification.
 
 ## Next: Vercel
 
-- [ ] Import `LukeAndreesen/DailyGames` from GitHub with the repository root as the Root Directory.
+- [x] Import `LukeAndreesen/DailyGames` from GitHub with the repository root as the Root Directory.
+- [x] Confirm the Git-linked `daily-games-m11g` preview deployment builds successfully.
+- [ ] Resolve the Vercel CLI account mismatch: CLI currently sees `landreesen-1259`, while MCP and the new project use the `luke-2256` account/team.
+- [ ] Decide whether to remove the separate misconfigured `daily-games` project after confirming it is unused.
 - [ ] Add all production environment variables listed in `.env.example`.
 - [ ] Generate one random `INGEST_SECRET` and use the exact same value in Vercel and Apps Script.
 - [ ] Deploy and record the production URL.
