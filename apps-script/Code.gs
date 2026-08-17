@@ -19,23 +19,27 @@ function doPost(e) {
     const incoming = JSON.parse(e.postData.contents);
     validateIncoming_(incoming);
 
-    const event = {
-      eventId: Utilities.getUuid(),
-      sender: String(incoming.sender),
-      game: String(incoming.game),
-      message: String(incoming.message),
-      receivedAt: new Date().toISOString(),
-    };
-
-    appendEvent_(event);
-    const outcome = forwardEvent_(event);
-    updateEventStatus_(event.eventId, outcome);
+    const stored = getOrCreateEvent_(incoming);
+    let outcome;
+    if (stored.status === "forwarded") {
+      outcome = { status: "forwarded", httpStatus: stored.httpStatus || 200, error: "" };
+    } else if (stored.status === "needs_review") {
+      outcome = {
+        status: "needs_review",
+        httpStatus: stored.httpStatus || "",
+        error: stored.error || "This event needs review before it can be retried.",
+      };
+    } else {
+      outcome = forwardEvent_(stored.event);
+      updateEventStatus_(stored.event.eventId, outcome);
+    }
 
     return jsonResponse_({
       ok: true,
       saved: true,
       forwarded: outcome.status === "forwarded",
-      eventId: event.eventId,
+      duplicate: stored.existed,
+      eventId: stored.event.eventId,
     });
   } catch (error) {
     console.error(error);
@@ -81,6 +85,63 @@ function validateIncoming_(incoming) {
       throw new Error("Missing string field: " + key);
     }
   });
+  if (incoming.receivedAt && isNaN(new Date(incoming.receivedAt).getTime())) {
+    throw new Error("receivedAt must be a valid date when provided");
+  }
+}
+
+function canonicalSender_(value) {
+  return String(value).replace(/\D/g, "");
+}
+
+function canonicalGame_(value) {
+  const key = String(value).toLowerCase().replace(/[^a-z0-9]/g, "");
+  return key === "maptag" ? "maptap" : key;
+}
+
+function canonicalMessage_(value) {
+  return String(value).replace(/\r\n?/g, "\n").trim();
+}
+
+function samePayload_(row, incoming) {
+  return (
+    canonicalSender_(row[2]) === canonicalSender_(incoming.sender) &&
+    canonicalGame_(row[3]) === canonicalGame_(incoming.game) &&
+    canonicalMessage_(row[4]) === canonicalMessage_(incoming.message)
+  );
+}
+
+function deterministicEventId_(incoming) {
+  const fingerprint = [
+    canonicalSender_(incoming.sender),
+    canonicalGame_(incoming.game),
+    canonicalMessage_(incoming.message),
+  ].join("\u001f");
+  const bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    fingerprint,
+    Utilities.Charset.UTF_8,
+  );
+  const hex = bytes
+    .map((byte) => (byte < 0 ? byte + 256 : byte).toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 32)
+    .split("");
+
+  // RFC 9562 version 8 UUID: application-defined deterministic payload.
+  hex[12] = "8";
+  hex[16] = ((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16);
+  return [
+    hex.slice(0, 8).join(""),
+    hex.slice(8, 12).join(""),
+    hex.slice(12, 16).join(""),
+    hex.slice(16, 20).join(""),
+    hex.slice(20, 32).join(""),
+  ].join("-");
+}
+
+function receivedAt_(value) {
+  return value ? new Date(value).toISOString() : new Date().toISOString();
 }
 
 function getScoreSheet_() {
@@ -104,11 +165,40 @@ function getScoreSheet_() {
   return sheet;
 }
 
-function appendEvent_(event) {
+function getOrCreateEvent_(incoming) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    getScoreSheet_().appendRow([
+    const sheet = getScoreSheet_();
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      const rows = sheet.getRange(2, 1, lastRow - 1, SCORE_HEADERS.length).getValues();
+      const existing = rows.find((row) => samePayload_(row, incoming));
+      if (existing) {
+        return {
+          existed: true,
+          status: String(existing[5] || "pending"),
+          httpStatus: existing[6],
+          error: String(existing[8] || ""),
+          event: {
+            eventId: String(existing[0]),
+            receivedAt: new Date(existing[1]).toISOString(),
+            sender: String(existing[2]),
+            game: String(existing[3]),
+            message: String(existing[4]),
+          },
+        };
+      }
+    }
+
+    const event = {
+      eventId: deterministicEventId_(incoming),
+      receivedAt: receivedAt_(incoming.receivedAt),
+      sender: String(incoming.sender),
+      game: String(incoming.game),
+      message: canonicalMessage_(incoming.message),
+    };
+    sheet.appendRow([
       event.eventId,
       event.receivedAt,
       event.sender,
@@ -119,6 +209,13 @@ function appendEvent_(event) {
       "",
       "",
     ]);
+    return {
+      existed: false,
+      status: "pending",
+      httpStatus: "",
+      error: "",
+      event,
+    };
   } finally {
     lock.releaseLock();
   }

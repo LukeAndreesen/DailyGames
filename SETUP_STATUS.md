@@ -62,4 +62,8 @@ This file tracks external setup only. Never add phone numbers, database password
 ## Optional after launch
 
 - [ ] Import historical Google Sheet rows with `npm run import:sheet -- /absolute/path/to/scores.csv`.
-- [ ] Add nightly iMessage/Sheet reconciliation.
+- [x] Implement and unit-test replay-safe Apps Script event identity for reconciliation.
+- [ ] Replace the deployed Apps Script code with the reconciliation-safe `apps-script/Code.gs` and
+      deploy a new version at the existing `/exec` URL.
+- [ ] Create and manually test the `Reconcile Daily Games` iPhone Shortcut.
+- [ ] Add a nightly Time of Day automation for the reconciliation Shortcut.

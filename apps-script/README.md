@@ -14,3 +14,36 @@ The iPhone Shortcuts continue posting to the existing Apps Script web-app URL. T
 5. Add a time-driven trigger that runs `retryFailedRows` every 15 minutes.
 
 The script creates a new `Score Events` tab, preserving any existing score tab and historical data.
+
+## Nightly reconciliation
+
+Keep the existing real-time Message automations exactly as they are. Add one separate, scheduled
+Shortcut that searches recent Messages and reposts matching score shares to the same Apps Script
+`/exec` URL.
+
+The reconciliation Shortcut should send:
+
+```json
+{
+  "sender": "the message sender",
+  "game": "MapTag, PricePoint, GeoEvents, or GeoHistory",
+  "message": "the complete message content",
+  "receivedAt": "the original message date in ISO 8601 format"
+}
+```
+
+`receivedAt` is optional for existing live automations, but the reconciliation Shortcut should
+include it so a late-night replay is assigned to the day when the message was received.
+
+The relay makes replays safe in two ways:
+
+- It canonicalizes sender, game, and message text and finds an existing Sheet row before appending.
+- New events receive a deterministic UUID from that canonical payload.
+
+Consequently, replaying a message already marked `forwarded` neither adds another Sheet row nor
+calls the ingestion API again. Rows created by the older relay with random event IDs are also found
+by their canonical payload. The application database additionally enforces one normalized result
+per player, game, and game date.
+
+Run the reconciliation Shortcut manually once before scheduling it. Existing forwarded rows should
+remain unchanged. Then create a personal **Time of Day** automation that runs the Shortcut nightly.
