@@ -45,17 +45,19 @@ export default async function PlayerPage({ params }: Props) {
     <div className="space-y-5 pb-4">
       <PreviewBanner isPreview={data.isPreview} />
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand)]">Player profile</p>
-        <h1 className="text-3xl font-black tracking-tight">{player.displayName}</h1>
+        <p className="page-kicker text-xs font-black uppercase tracking-[0.16em]">Player profile</p>
+        <h1 className="fun-title text-4xl font-black tracking-tight">{player.displayName}</h1>
       </div>
       <div className="grid grid-cols-2 gap-3">
+        <Metric label="Elo rating" value={String(overall?.elo ?? 1000)} />
         <Metric label="Overall rank" value={overall?.rank ? `#${overall.rank}` : "—"} />
         <Metric
-          label="Average placement"
+          label="Rank points"
           value={overall?.averagePlacement === null || overall?.averagePlacement === undefined ? "—" : overall.averagePlacement.toFixed(1)}
         />
         <Metric label="Games played" value={String(overall?.gamesPlayed ?? 0)} />
         <Metric label="Participation" value={`${(overall?.participationRate ?? 0).toFixed(0)}%`} />
+        <Metric label="Game wins" value={String(overall?.gameWins ?? 0)} />
       </div>
       <section className="card p-4">
         <SectionHeading title="By game" eyebrow="Performance" />
@@ -64,7 +66,7 @@ export default async function PlayerPage({ params }: Props) {
             <Link
               key={game.id}
               href={`/games/${game.slug}`}
-              className="flex min-h-20 items-center gap-3 py-3"
+              className="score-row flex min-h-20 items-center gap-3 rounded-xl px-2 py-3"
             >
               <div className="min-w-0 flex-1">
                 <p className="font-black">{game.displayName}</p>

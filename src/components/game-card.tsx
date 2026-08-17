@@ -34,7 +34,7 @@ export function GameCard({
             <Link
               key={player.id}
               href={`/players/${player.slug}`}
-              className="flex min-h-14 items-center gap-3 py-2"
+              className="score-row flex min-h-14 items-center gap-3 rounded-xl px-2 py-2"
             >
               <RankMark rank={result?.displayRank ?? null} />
               <span className="min-w-0 flex-1 truncate font-bold">{player.displayName}</span>

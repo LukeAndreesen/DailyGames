@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { OverallLeaderboardList } from "@/components/leaderboard-list";
-import { Metric, PreviewBanner, SectionHeading } from "@/components/ui";
+import {
+  EloExplainer,
+  Metric,
+  PreviewBanner,
+  ScoringExplainer,
+  SectionHeading,
+} from "@/components/ui";
 import { loadAppData } from "@/lib/data";
 import { getOverallStandings } from "@/lib/scoring";
 
@@ -15,10 +21,10 @@ export default async function LeaderboardPage() {
     <div className="space-y-5 pb-4">
       <PreviewBanner isPreview={data.isPreview} />
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand)]">All time</p>
-        <h1 className="text-3xl font-black tracking-tight">Leaderboard</h1>
+        <p className="page-kicker text-xs font-black uppercase tracking-[0.16em]">All time</p>
+        <h1 className="fun-title text-4xl font-black tracking-tight">Leaderboard</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Average placement across every game played. Missing games never lower the average.
+          The definitive pecking order—powered by Elo and normalized rank points.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -26,12 +32,11 @@ export default async function LeaderboardPage() {
         <Metric label="Scores logged" value={String(data.results.length)} />
       </div>
       <section className="card p-4">
-        <SectionHeading title="Overall standings" eyebrow="Average placement" />
+        <SectionHeading title="Overall standings" eyebrow="Elo rating" />
         <OverallLeaderboardList standings={standings} />
       </section>
-      <p className="px-2 text-xs leading-5 text-[var(--muted)]">
-        Solo entries count toward participation and raw-score statistics, but require an opponent to earn placement credit.
-      </p>
+      <EloExplainer />
+      <ScoringExplainer />
     </div>
   );
 }

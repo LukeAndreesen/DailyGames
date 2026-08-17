@@ -20,8 +20,8 @@ export default async function PlayersPage() {
     <div className="space-y-5 pb-4">
       <PreviewBanner isPreview={data.isPreview} />
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand)]">The group</p>
-        <h1 className="text-3xl font-black tracking-tight">Players</h1>
+        <p className="page-kicker text-xs font-black uppercase tracking-[0.16em]">The group</p>
+        <h1 className="fun-title text-4xl font-black tracking-tight">Players</h1>
       </div>
       <section className="card divide-y divide-[var(--line)] px-4">
         {data.players.map((player) => {
@@ -30,16 +30,23 @@ export default async function PlayersPage() {
             <Link
               key={player.id}
               href={`/players/${player.slug}`}
-              className="flex min-h-20 items-center gap-3 py-3"
+              className="score-row flex min-h-20 items-center gap-3 rounded-xl px-2 py-3"
             >
               <RankMark rank={standing?.rank ?? null} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-lg font-black">{player.displayName}</p>
                 <p className="text-xs text-[var(--muted)]">
-                  {standing?.gamesPlayed ?? 0} games · {standing?.gameWins ?? 0} wins
+                  {standing?.gamesPlayed ?? 0} games · {standing?.gameWins ?? 0} wins ·{" "}
+                  {standing?.averagePlacement?.toFixed(1) ?? "—"} pts
                 </p>
               </div>
-              <ChevronRight className="text-[var(--muted)]" />
+              <div className="tabular text-right">
+                <p className="text-lg font-black text-[var(--brand)]">{standing?.elo ?? 1000}</p>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[var(--muted)]">
+                  Elo
+                </p>
+              </div>
+              <ChevronRight className="text-[var(--muted)]" size={18} />
             </Link>
           );
         })}

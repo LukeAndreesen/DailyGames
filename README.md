@@ -29,7 +29,8 @@ Only Google Apps Script is updated. The iPhone automations keep their current UR
 
 - Four tested share-message parsers, including appended-comment handling.
 - First-valid-score-wins idempotent ingestion.
-- Average-placement scoring with split ties, ignored missing games, and excluded solo placement.
+- Normalized 0–100 rank points with split ties, ignored missing games, and excluded solo placement.
+- Multiplayer Elo ratings plus Chud of the day, trailing-week, and all-time awards.
 - Daily, all-time, game, and player views.
 - Supabase RLS and a private schema for phones/raw messages.
 - Supabase Realtime refresh plus mobile Safari focus recovery.

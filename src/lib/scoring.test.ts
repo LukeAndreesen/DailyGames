@@ -3,7 +3,9 @@ import type { PublicPlayer, Result } from "@/lib/domain";
 import { games } from "@/lib/games";
 import {
   getDailyStandings,
+  getEloRatings,
   getGameStandings,
+  getChudHighlights,
   getOverallStandings,
   rankGameResults,
 } from "@/lib/scoring";
@@ -95,5 +97,50 @@ describe("placement scoring", () => {
     const standings = getGameStandings(geoHistory, players, games, results);
     expect(standings[0].player.id).toBe("b");
     expect(standings[0].averageScore).toBe(875);
+  });
+
+  it("updates multiplayer Elo chronologically and splits ties", () => {
+    const results = [
+      result("1", "a", geoHistory.id, "2026-08-15", 900),
+      result("2", "b", geoHistory.id, "2026-08-15", 800),
+      result("3", "c", geoHistory.id, "2026-08-15", 700),
+      result("4", "a", geoHistory.id, "2026-08-16", 800),
+      result("5", "b", geoHistory.id, "2026-08-16", 900),
+      result("6", "c", geoHistory.id, "2026-08-16", 800),
+    ];
+    const ratings = getEloRatings(players, games, results);
+
+    expect(ratings.get("a")).toBeCloseTo(1006.9, 2);
+    expect(ratings.get("b")).toBeCloseTo(1016, 2);
+    expect(ratings.get("c")).toBeCloseTo(977.1, 2);
+    expect(getOverallStandings(players, games, results)[0].player.id).toBe("b");
+  });
+
+  it("does not change Elo for a solo result", () => {
+    const ratings = getEloRatings(
+      players,
+      games,
+      [result("1", "a", geoHistory.id, "2026-08-16", 900)],
+    );
+    expect(ratings.get("a")).toBe(1000);
+  });
+
+  it("finds the lowest rank score for day, trailing week, and all time", () => {
+    const results = [
+      result("1", "a", geoHistory.id, "2026-08-08", 900),
+      result("2", "b", geoHistory.id, "2026-08-08", 800),
+      result("3", "c", geoHistory.id, "2026-08-08", 700),
+      result("4", "a", geoHistory.id, "2026-08-09", 900),
+      result("5", "b", geoHistory.id, "2026-08-09", 800),
+      result("6", "c", geoHistory.id, "2026-08-09", 700),
+      result("7", "a", geoHistory.id, "2026-08-16", 900),
+      result("8", "b", geoHistory.id, "2026-08-16", 700),
+      result("9", "c", geoHistory.id, "2026-08-16", 800),
+    ];
+    const chuds = getChudHighlights("2026-08-16", players, games, results);
+
+    expect(chuds.find((entry) => entry.label === "Day")?.player?.id).toBe("b");
+    expect(chuds.find((entry) => entry.label === "Week")?.player?.id).toBe("b");
+    expect(chuds.find((entry) => entry.label === "All time")?.player?.id).toBe("c");
   });
 });

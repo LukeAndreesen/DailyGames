@@ -18,7 +18,7 @@ const links = [
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="bottom-safe fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-xl border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] px-3 pt-2 backdrop-blur-xl">
+    <nav className="bottom-nav-shell bottom-safe fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-xl px-3 pt-2 backdrop-blur-xl">
       <div className="grid grid-cols-3 gap-1">
         {links.map((link) => {
           const active = link.matches(pathname);
@@ -27,7 +27,7 @@ export function BottomNav() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-xs font-bold transition ${active ? "bg-[var(--brand-soft)] text-[var(--brand)]" : "text-[var(--muted)]"}`}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-black transition ${active ? "bottom-nav-active text-[var(--brand-dark)]" : "text-[var(--muted)]"}`}
             >
               <Icon size={20} strokeWidth={active ? 2.7 : 2} />
               {link.label}

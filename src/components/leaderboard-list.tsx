@@ -9,7 +9,7 @@ export function DailyLeaderboardList({ standings }: { standings: DailyStanding[]
         <Link
           key={standing.player.id}
           href={`/players/${standing.player.slug}`}
-          className="flex min-h-16 items-center gap-3 py-3"
+          className="score-row flex min-h-16 items-center gap-3 rounded-xl px-2 py-3"
         >
           <RankMark rank={standing.rank} />
           <div className="min-w-0 flex-1">
@@ -22,7 +22,7 @@ export function DailyLeaderboardList({ standings }: { standings: DailyStanding[]
             <p className="text-xl font-black">
               {standing.averagePlacement === null ? "—" : standing.averagePlacement.toFixed(1)}
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">avg place</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">rank pts</p>
           </div>
         </Link>
       ))}
@@ -37,20 +37,21 @@ export function OverallLeaderboardList({ standings }: { standings: OverallStandi
         <Link
           key={standing.player.id}
           href={`/players/${standing.player.slug}`}
-          className="flex min-h-18 items-center gap-3 py-3"
+          className="score-row flex min-h-18 items-center gap-3 rounded-xl px-2 py-3"
         >
           <RankMark rank={standing.rank} />
           <div className="min-w-0 flex-1">
             <p className="truncate font-extrabold">{standing.player.displayName}</p>
             <p className="text-xs text-[var(--muted)]">
-              {standing.gamesPlayed} games · {standing.participationRate.toFixed(0)}% played
+              {standing.gamesPlayed} games · {standing.participationRate.toFixed(0)}% played ·{" "}
+              {standing.averagePlacement === null ? "—" : standing.averagePlacement.toFixed(1)} pts
             </p>
           </div>
           <div className="tabular text-right">
-            <p className="text-xl font-black">
-              {standing.averagePlacement === null ? "—" : standing.averagePlacement.toFixed(1)}
+            <p className="text-xl font-black text-[var(--brand)]">{standing.elo}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+              Elo
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">all-time avg</p>
           </div>
         </Link>
       ))}

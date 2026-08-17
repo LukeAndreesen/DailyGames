@@ -11,25 +11,25 @@ export function DateNavigator({ date, today }: { date: string; today: string }) 
       <Link
         href={`/day/${previous}`}
         aria-label="Previous day"
-        className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--background)]"
+        className="nav-arrow flex h-11 w-11 items-center justify-center rounded-xl"
       >
         <ChevronLeft />
       </Link>
       <div className="text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--brand)]">
+        <p className="page-kicker text-xs font-black uppercase tracking-[0.14em]">
           {date === today ? "Today" : "Results"}
         </p>
         <h1 className="text-lg font-black">{formatLongDate(date)}</h1>
       </div>
       {nextDisabled ? (
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--background)] opacity-30">
+          <span className="nav-arrow flex h-11 w-11 items-center justify-center rounded-xl opacity-30">
           <ChevronRight />
         </span>
       ) : (
         <Link
           href={next === today ? "/" : `/day/${next}`}
           aria-label="Next day"
-          className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--background)]"
+          className="nav-arrow flex h-11 w-11 items-center justify-center rounded-xl"
         >
           <ChevronRight />
         </Link>

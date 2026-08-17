@@ -59,11 +59,19 @@ export type DailyStanding = {
 export type OverallStanding = {
   player: PublicPlayer;
   averagePlacement: number | null;
+  elo: number;
   gamesPlayed: number;
   activeDays: number;
   participationRate: number;
   gameWins: number;
   rank: number | null;
+};
+
+export type ChudHighlight = {
+  label: "Day" | "Week" | "All time";
+  player: PublicPlayer | null;
+  averagePlacement: number | null;
+  gamesPlayed: number;
 };
 
 export type GameStanding = {

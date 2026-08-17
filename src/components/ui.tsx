@@ -1,4 +1,4 @@
-import { ChevronRight, Trophy } from "lucide-react";
+import { ChevronRight, CircleHelp, Trophy, Zap } from "lucide-react";
 import Link from "next/link";
 
 export function PreviewBanner({ isPreview }: { isPreview: boolean }) {
@@ -45,13 +45,16 @@ export function SectionHeading({
 export function RankMark({ rank }: { rank: number | null }) {
   if (rank === 1) {
     return (
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400/20 text-amber-600">
+      <span className="rank-mark rank-mark-first flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-amber-950">
         <Trophy size={18} aria-label="First place" />
       </span>
     );
   }
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--background)] text-sm font-black text-[var(--muted)]">
+    <span
+      className={`rank-mark flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black ${rank === 2 ? "rank-mark-second" : rank === 3 ? "rank-mark-third" : ""}`}
+      aria-label={rank === null ? "Not ranked" : `Rank ${rank}`}
+    >
       {rank ?? "—"}
     </span>
   );
@@ -59,9 +62,45 @@ export function RankMark({ rank }: { rank: number | null }) {
 
 export function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-[var(--background)] px-3 py-3">
+    <div className="metric-card rounded-2xl px-4 py-3">
       <p className="text-xs font-semibold text-[var(--muted)]">{label}</p>
       <p className="tabular mt-1 text-lg font-black">{value}</p>
+    </div>
+  );
+}
+
+export function ScoringExplainer() {
+  return (
+    <div className="score-explainer rounded-2xl p-4 text-sm leading-6">
+      <div className="flex gap-3">
+        <CircleHelp
+          className="mt-0.5 shrink-0 text-[var(--brand)]"
+          size={20}
+          aria-hidden="true"
+        />
+        <div>
+          <p className="font-black">Where do rank points come from?</p>
+          <p className="mt-1 text-[var(--muted)]">
+            Each game is converted to a fair 0–100 score: first place gets 100, last gets 0, and
+            everyone between is spaced evenly. Ties split the tied places. We average those points;
+            missed games and solo entries do not lower the score.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function EloExplainer() {
+  return (
+    <div className="elo-explainer rounded-2xl p-4 text-sm leading-6">
+      <div className="flex gap-3">
+        <Zap className="mt-0.5 shrink-0" size={20} aria-hidden="true" />
+        <p>
+          <strong>Elo starts at 1000.</strong> It rises when you beat opponents—especially higher-rated
+          ones—and falls after losses. Every multiplayer game updates it; ties split the result.
+        </p>
+      </div>
     </div>
   );
 }
