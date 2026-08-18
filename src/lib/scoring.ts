@@ -156,14 +156,19 @@ export function getDailyStandings(
 ): DailyStanding[] {
   const daily = results.filter((result) => result.gameDate === date);
   const ranked = buildRankedResults(daily, games);
+  const dailyGameCount = games.length;
   const standings = players.map((player) => {
     const played = ranked.filter((result) => result.playerId === player.id);
+    const placementByGameId = new Map(
+      played.map((result) => [result.gameId, result.placementScore ?? 0]),
+    );
+    const dailyPlacementScores = games.map((game) => placementByGameId.get(game.id) ?? 0);
     const qualifying = played.flatMap((result) =>
       result.placementScore === null ? [] : [result.placementScore],
     );
     return {
       player,
-      averagePlacement: qualifying.length ? average(qualifying) : null,
+      averagePlacement: dailyGameCount ? average(dailyPlacementScores) : null,
       gamesPlayed: played.length,
       qualifyingGames: qualifying.length,
       gameWins: played.filter((result) => result.isWinner).length,
