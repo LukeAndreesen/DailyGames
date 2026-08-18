@@ -82,8 +82,8 @@ export function ScoringExplainer() {
           <p className="font-black">Where do rank points come from?</p>
           <p className="mt-1 text-[var(--muted)]">
             Each game is converted to a fair 0–100 score: first place gets 100, last gets 0, and
-            everyone between is spaced evenly. Ties split the tied places. We average those points;
-            missed games and solo entries do not lower the score.
+            everyone between is spaced evenly. Ties split the tied places. Daily averages include
+            missed games as 0-point entries, and solo entries count as 0.
           </p>
         </div>
       </div>

@@ -61,7 +61,7 @@ describe("placement scoring", () => {
     expect(ranked[0].isWinner).toBe(false);
   });
 
-  it("ignores missing games in a daily average", () => {
+  it("counts missing games as zero in a daily average", () => {
     const mapTap = games.find((game) => game.slug === "maptap")!;
     const results = [
       result("1", "a", geoHistory.id, "2026-08-16", 900),
@@ -72,7 +72,13 @@ describe("placement scoring", () => {
     const standings = getDailyStandings("2026-08-16", players, games, results);
     expect(standings.find((entry) => entry.player.id === "b")?.averagePlacement).toBe(0);
     expect(standings.find((entry) => entry.player.id === "b")?.gamesPlayed).toBe(1);
-    expect(standings.find((entry) => entry.player.id === "a")?.averagePlacement).toBe(50);
+    expect(standings.find((entry) => entry.player.id === "a")?.averagePlacement).toBe(25);
+    expect(standings.find((entry) => entry.player.id === "c")?.averagePlacement).toBe(25);
+  });
+
+  it("assigns zero when a player misses every game of the day", () => {
+    const standings = getDailyStandings("2026-08-16", players, games, []);
+    expect(standings.find((entry) => entry.player.id === "a")?.averagePlacement).toBe(0);
   });
 
   it("weights every qualifying game equally all time", () => {
