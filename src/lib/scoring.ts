@@ -225,8 +225,10 @@ export function getOverallStandings(
     });
 }
 
-function lowestStanding(standings: OverallStanding[]): OverallStanding | null {
-  return standings.reduce<OverallStanding | null>((lowest, standing) => {
+type ChudCandidate = Pick<DailyStanding, "player" | "averagePlacement" | "gamesPlayed">;
+
+function lowestStanding(standings: ChudCandidate[]): ChudCandidate | null {
+  return standings.reduce<ChudCandidate | null>((lowest, standing) => {
     if (standing.averagePlacement === null) return lowest;
     if (!lowest || lowest.averagePlacement === null) return standing;
     if (standing.averagePlacement < lowest.averagePlacement) return standing;
@@ -247,11 +249,10 @@ export function getChudHighlights(
   results: Result[],
 ): ChudHighlight[] {
   const weekStart = shiftDate(referenceDate, -6);
-  const periods: Array<{ label: ChudHighlight["label"]; results: Result[] }> = [
-    {
-      label: "Day",
-      results: results.filter((result) => result.gameDate === referenceDate),
-    },
+  const dayChud = lowestStanding(
+    getDailyStandings(referenceDate, players, games, results),
+  );
+  const periods: Array<{ label: Exclude<ChudHighlight["label"], "Day">; results: Result[] }> = [
     {
       label: "Week",
       results: results.filter(
@@ -261,15 +262,23 @@ export function getChudHighlights(
     { label: "All time", results },
   ];
 
-  return periods.map((period) => {
-    const chud = lowestStanding(getOverallStandings(players, games, period.results));
-    return {
-      label: period.label,
-      player: chud?.player ?? null,
-      averagePlacement: chud?.averagePlacement ?? null,
-      gamesPlayed: chud?.gamesPlayed ?? 0,
-    };
-  });
+  return [
+    {
+      label: "Day" as const,
+      player: dayChud?.player ?? null,
+      averagePlacement: dayChud?.averagePlacement ?? null,
+      gamesPlayed: dayChud?.gamesPlayed ?? 0,
+    },
+    ...periods.map((period) => {
+      const chud = lowestStanding(getOverallStandings(players, games, period.results));
+      return {
+        label: period.label,
+        player: chud?.player ?? null,
+        averagePlacement: chud?.averagePlacement ?? null,
+        gamesPlayed: chud?.gamesPlayed ?? 0,
+      };
+    }),
+  ];
 }
 
 export function getGameStandings(
