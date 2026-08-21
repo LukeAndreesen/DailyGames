@@ -170,5 +170,10 @@ describe("placement scoring", () => {
     expect(weeklyChud?.player?.id).toBe("b");
     expect(weeklyChud?.averagePlacement).toBe(6.25);
     expect(weeklyChud?.gamesPlayed).toBe(2);
+
+    const allTimeChud = tuesday.find((entry) => entry.label === "All time");
+    expect(allTimeChud?.player?.id).toBe("b");
+    expect(allTimeChud?.averagePlacement).toBe(6.25);
+    expect(allTimeChud?.gamesPlayed).toBe(2);
   });
 });
