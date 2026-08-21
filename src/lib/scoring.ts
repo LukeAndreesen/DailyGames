@@ -242,6 +242,35 @@ function lowestStanding(standings: ChudCandidate[]): ChudCandidate | null {
   }, null);
 }
 
+function getAverageDailyStandings(
+  dates: string[],
+  players: PublicPlayer[],
+  games: Game[],
+  results: Result[],
+): ChudCandidate[] {
+  const dailyStandings = dates.map((date) =>
+    getDailyStandings(date, players, games, results),
+  );
+  return players.map((player) => {
+    const daily = dailyStandings.map((standings) =>
+      standings.find((standing) => standing.player.id === player.id),
+    );
+    const dailyScores = daily.flatMap((standing) =>
+      standing?.averagePlacement === null || standing?.averagePlacement === undefined
+        ? []
+        : [standing.averagePlacement],
+    );
+    return {
+      player,
+      averagePlacement: dailyScores.length ? average(dailyScores) : null,
+      gamesPlayed: daily.reduce(
+        (total, standing) => total + (standing?.gamesPlayed ?? 0),
+        0,
+      ),
+    };
+  });
+}
+
 export function getChudHighlights(
   referenceDate: string,
   players: PublicPlayer[],
@@ -257,30 +286,13 @@ export function getChudHighlights(
   const dayChud = lowestStanding(
     getDailyStandings(referenceDate, players, games, results),
   );
-  const dailyWeekStandings = weekDates.map((date) =>
-    getDailyStandings(date, players, games, results),
-  );
   const weekChud = lowestStanding(
-    players.map((player) => {
-      const daily = dailyWeekStandings.map((standings) =>
-        standings.find((standing) => standing.player.id === player.id),
-      );
-      const dailyScores = daily.flatMap((standing) =>
-        standing?.averagePlacement === null || standing?.averagePlacement === undefined
-          ? []
-          : [standing.averagePlacement],
-      );
-      return {
-        player,
-        averagePlacement: dailyScores.length ? average(dailyScores) : null,
-        gamesPlayed: daily.reduce(
-          (total, standing) => total + (standing?.gamesPlayed ?? 0),
-          0,
-        ),
-      };
-    }),
+    getAverageDailyStandings(weekDates, players, games, results),
   );
-  const allTimeChud = lowestStanding(getOverallStandings(players, games, results));
+  const allTimeDates = [...new Set(results.map((result) => result.gameDate))].sort();
+  const allTimeChud = lowestStanding(
+    getAverageDailyStandings(allTimeDates, players, games, results),
+  );
 
   return [
     {
