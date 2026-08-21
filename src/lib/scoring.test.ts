@@ -131,7 +131,7 @@ describe("placement scoring", () => {
     expect(ratings.get("a")).toBe(1000);
   });
 
-  it("finds the lowest rank score for day, trailing week, and all time", () => {
+  it("finds the lowest rank score for day, calendar week, and all time", () => {
     const results = [
       result("1", "a", geoHistory.id, "2026-08-08", 900),
       result("2", "b", geoHistory.id, "2026-08-08", 800),
@@ -148,5 +148,27 @@ describe("placement scoring", () => {
     expect(chuds.find((entry) => entry.label === "Day")?.player?.id).toBe("b");
     expect(chuds.find((entry) => entry.label === "Week")?.player?.id).toBe("b");
     expect(chuds.find((entry) => entry.label === "All time")?.player?.id).toBe("c");
+  });
+
+  it("averages daily scores from Monday through the reference day", () => {
+    const results = [
+      result("1", "a", geoHistory.id, "2026-08-17", 900),
+      result("2", "b", geoHistory.id, "2026-08-17", 700),
+      result("3", "c", geoHistory.id, "2026-08-17", 800),
+      result("4", "a", geoHistory.id, "2026-08-18", 900),
+      result("5", "b", geoHistory.id, "2026-08-18", 800),
+      result("6", "c", geoHistory.id, "2026-08-18", 700),
+    ];
+
+    const monday = getChudHighlights("2026-08-17", players, games, results);
+    expect(monday.find((entry) => entry.label === "Week")?.averagePlacement).toBe(
+      monday.find((entry) => entry.label === "Day")?.averagePlacement,
+    );
+
+    const tuesday = getChudHighlights("2026-08-18", players, games, results);
+    const weeklyChud = tuesday.find((entry) => entry.label === "Week");
+    expect(weeklyChud?.player?.id).toBe("b");
+    expect(weeklyChud?.averagePlacement).toBe(6.25);
+    expect(weeklyChud?.gamesPlayed).toBe(2);
   });
 });

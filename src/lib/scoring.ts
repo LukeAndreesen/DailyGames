@@ -248,19 +248,39 @@ export function getChudHighlights(
   games: Game[],
   results: Result[],
 ): ChudHighlight[] {
-  const weekStart = shiftDate(referenceDate, -6);
+  const referenceDay = new Date(`${referenceDate}T12:00:00Z`).getUTCDay();
+  const daysSinceMonday = (referenceDay + 6) % 7;
+  const weekStart = shiftDate(referenceDate, -daysSinceMonday);
+  const weekDates = Array.from({ length: daysSinceMonday + 1 }, (_, index) =>
+    shiftDate(weekStart, index),
+  );
   const dayChud = lowestStanding(
     getDailyStandings(referenceDate, players, games, results),
   );
-  const periods: Array<{ label: Exclude<ChudHighlight["label"], "Day">; results: Result[] }> = [
-    {
-      label: "Week",
-      results: results.filter(
-        (result) => result.gameDate >= weekStart && result.gameDate <= referenceDate,
-      ),
-    },
-    { label: "All time", results },
-  ];
+  const dailyWeekStandings = weekDates.map((date) =>
+    getDailyStandings(date, players, games, results),
+  );
+  const weekChud = lowestStanding(
+    players.map((player) => {
+      const daily = dailyWeekStandings.map((standings) =>
+        standings.find((standing) => standing.player.id === player.id),
+      );
+      const dailyScores = daily.flatMap((standing) =>
+        standing?.averagePlacement === null || standing?.averagePlacement === undefined
+          ? []
+          : [standing.averagePlacement],
+      );
+      return {
+        player,
+        averagePlacement: dailyScores.length ? average(dailyScores) : null,
+        gamesPlayed: daily.reduce(
+          (total, standing) => total + (standing?.gamesPlayed ?? 0),
+          0,
+        ),
+      };
+    }),
+  );
+  const allTimeChud = lowestStanding(getOverallStandings(players, games, results));
 
   return [
     {
@@ -269,15 +289,18 @@ export function getChudHighlights(
       averagePlacement: dayChud?.averagePlacement ?? null,
       gamesPlayed: dayChud?.gamesPlayed ?? 0,
     },
-    ...periods.map((period) => {
-      const chud = lowestStanding(getOverallStandings(players, games, period.results));
-      return {
-        label: period.label,
-        player: chud?.player ?? null,
-        averagePlacement: chud?.averagePlacement ?? null,
-        gamesPlayed: chud?.gamesPlayed ?? 0,
-      };
-    }),
+    {
+      label: "Week" as const,
+      player: weekChud?.player ?? null,
+      averagePlacement: weekChud?.averagePlacement ?? null,
+      gamesPlayed: weekChud?.gamesPlayed ?? 0,
+    },
+    {
+      label: "All time" as const,
+      player: allTimeChud?.player ?? null,
+      averagePlacement: allTimeChud?.averagePlacement ?? null,
+      gamesPlayed: allTimeChud?.gamesPlayed ?? 0,
+    },
   ];
 }
 
