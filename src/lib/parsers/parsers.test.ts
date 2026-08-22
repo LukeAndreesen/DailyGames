@@ -54,6 +54,18 @@ The map was not loaded for 10 seconds`;
     });
   });
 
+  it("parses GeoSports with the same score format as GeoHistory", () => {
+    const message = `GeoSports · August 16th
+🟢🟡🟢⚪️🟢
+976 / 1,000
+www.geosports.app`;
+    expect(parseResult("geosports", message, receivedAt)).toEqual({
+      gameDate: "2026-08-16",
+      score: 976,
+      details: {},
+    });
+  });
+
   it("uses the closest year around New Year", () => {
     const message = "GeoHistory · December 31st\n890 / 1,000\nwww.geohistory.gg";
     expect(
@@ -70,6 +82,16 @@ The map was not loaded for 10 seconds`;
       parseResult(
         "geohistory",
         "GeoEvents August 16\n900 / 1,000\nwww.geoevents.app",
+        receivedAt,
+      ),
+    ).toThrowError(ParseError);
+  });
+
+  it("rejects a GeoHistory share selected as GeoSports", () => {
+    expect(() =>
+      parseResult(
+        "geosports",
+        "GeoHistory · August 16th\n900 / 1,000\nwww.geohistory.gg",
         receivedAt,
       ),
     ).toThrowError(ParseError);

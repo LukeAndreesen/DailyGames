@@ -19,6 +19,7 @@ type GameRow = {
   max_score: number | null;
   higher_is_better: boolean;
   display_order: number;
+  scoring_starts_on: string | Date | null;
 };
 
 type ResultRow = {
@@ -54,7 +55,14 @@ export async function loadAppData(): Promise<AppData> {
       order by display_order
     `,
     sql<GameRow[]>`
-      select id, slug, display_name, max_score, higher_is_better, display_order
+      select
+        id,
+        slug,
+        display_name,
+        max_score,
+        higher_is_better,
+        display_order,
+        scoring_starts_on
       from public.games
       order by display_order
     `,
@@ -74,6 +82,10 @@ export async function loadAppData(): Promise<AppData> {
     maxScore: row.max_score,
     higherIsBetter: row.higher_is_better,
     displayOrder: row.display_order,
+    scoringStartsOn:
+      row.scoring_starts_on instanceof Date
+        ? row.scoring_starts_on.toISOString().slice(0, 10)
+        : row.scoring_starts_on,
   }));
 
   if (mode === "preview") {

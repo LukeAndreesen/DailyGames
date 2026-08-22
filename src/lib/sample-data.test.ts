@@ -42,4 +42,14 @@ describe("preview data", () => {
       expect(gameIds.has(result.gameId)).toBe(true);
     }
   });
+
+  it("does not generate GeoSports preview results before its scoring start date", () => {
+    const data = createPreviewData({ players, games, today: "2026-08-23" });
+    const geoSports = games.find((game) => game.slug === "geosports")!;
+    const geoSportsDates = data.results
+      .filter((result) => result.gameId === geoSports.id)
+      .map((result) => result.gameDate);
+
+    expect(new Set(geoSportsDates)).toEqual(new Set(["2026-08-23"]));
+  });
 });

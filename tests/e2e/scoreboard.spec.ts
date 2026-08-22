@@ -4,6 +4,7 @@ test("renders the daily scoreboard without horizontal overflow", async ({ page }
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Daily leaderboard" })).toBeVisible();
   await expect(page.getByText("GeoHistory", { exact: true })).toBeVisible();
+  await expect(page.getByText("GeoSports", { exact: true })).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
     content: document.documentElement.scrollWidth,

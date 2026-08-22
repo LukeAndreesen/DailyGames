@@ -1,6 +1,6 @@
 import type { AppData, Game, GameSlug, PublicPlayer, Result } from "@/lib/domain";
 import { shiftDate } from "@/lib/date";
-import { games as defaultGames } from "@/lib/games";
+import { games as defaultGames, isGameScoredOn } from "@/lib/games";
 
 export const previewPlayers: PublicPlayer[] = [
   "Alex",
@@ -23,6 +23,7 @@ const scoreRanges: Record<GameSlug, { base: number; range: number }> = {
   pricepoint: { base: 8_000, range: 7_001 },
   geoevents: { base: 720, range: 280 },
   geohistory: { base: 740, range: 260 },
+  geosports: { base: 740, range: 260 },
 };
 
 function previewScore(
@@ -52,8 +53,9 @@ export function createPreviewData({
   let resultIndex = 0;
 
   const results: Result[] = dates.flatMap((gameDate, dayIndex) =>
-    games.flatMap((game, gameIndex) =>
-      players.flatMap((player, playerIndex) => {
+    games.flatMap((game, gameIndex) => {
+      if (!isGameScoredOn(game, gameDate)) return [];
+      return players.flatMap((player, playerIndex) => {
         const isMissingSubmission =
           players.length > 3 &&
           (playerIndex * 2 + dayIndex * 3 + gameIndex * 5) % 13 === 0;
@@ -71,8 +73,8 @@ export function createPreviewData({
             receivedAt: `${gameDate}T${String(14 + (playerIndex % 7)).padStart(2, "0")}:00:00.000Z`,
           },
         ];
-      }),
-    ),
+      });
+    }),
   );
 
   return { players, games, results, isPreview: true };

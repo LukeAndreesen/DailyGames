@@ -9,6 +9,7 @@ import type {
   Result,
 } from "@/lib/domain";
 import { shiftDate } from "@/lib/date";
+import { isGameScoredOn } from "@/lib/games";
 
 export const INITIAL_ELO = 1000;
 export const ELO_K_FACTOR = 32;
@@ -80,6 +81,8 @@ export function buildRankedResults(results: Result[], games: Game[]): RankedResu
   const gameById = new Map(games.map((game) => [game.id, game]));
   const groups = new Map<string, Result[]>();
   results.forEach((result) => {
+    const game = gameById.get(result.gameId);
+    if (!game || !isGameScoredOn(game, result.gameDate)) return;
     const key = `${result.gameId}:${result.gameDate}`;
     groups.set(key, [...(groups.get(key) ?? []), result]);
   });
@@ -156,13 +159,16 @@ export function getDailyStandings(
 ): DailyStanding[] {
   const daily = results.filter((result) => result.gameDate === date);
   const ranked = buildRankedResults(daily, games);
-  const dailyGameCount = games.length;
+  const scoredGames = games.filter((game) => isGameScoredOn(game, date));
+  const dailyGameCount = scoredGames.length;
   const standings = players.map((player) => {
     const played = ranked.filter((result) => result.playerId === player.id);
     const placementByGameId = new Map(
       played.map((result) => [result.gameId, result.placementScore ?? 0]),
     );
-    const dailyPlacementScores = games.map((game) => placementByGameId.get(game.id) ?? 0);
+    const dailyPlacementScores = scoredGames.map(
+      (game) => placementByGameId.get(game.id) ?? 0,
+    );
     const qualifying = played.flatMap((result) =>
       result.placementScore === null ? [] : [result.placementScore],
     );
@@ -193,7 +199,7 @@ export function getOverallStandings(
   const ranked = buildRankedResults(results, games);
   const eloRatings = getEloRatings(players, games, results);
   const trackedGameDays = new Set(
-    results.map((result) => `${result.gameId}:${result.gameDate}`),
+    ranked.map((result) => `${result.gameId}:${result.gameDate}`),
   ).size;
   const standings = players.map((player) => {
     const played = ranked.filter((result) => result.playerId === player.id);

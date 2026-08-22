@@ -3,6 +3,7 @@ export const gameSlugs = [
   "pricepoint",
   "geoevents",
   "geohistory",
+  "geosports",
 ] as const;
 
 export type GameSlug = (typeof gameSlugs)[number];
@@ -22,6 +23,7 @@ export type Game = {
   maxScore: number | null;
   higherIsBetter: boolean;
   displayOrder: number;
+  scoringStartsOn: string | null;
 };
 
 export type Result = {

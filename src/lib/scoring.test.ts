@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { PublicPlayer, Result } from "@/lib/domain";
 import { games } from "@/lib/games";
 import {
+  buildRankedResults,
   getDailyStandings,
   getEloRatings,
   getGameStandings,
@@ -79,6 +80,37 @@ describe("placement scoring", () => {
   it("assigns zero when a player misses every game of the day", () => {
     const standings = getDailyStandings("2026-08-16", players, games, []);
     expect(standings.find((entry) => entry.player.id === "a")?.averagePlacement).toBe(0);
+  });
+
+  it("does not count GeoSports as a missed game before its scoring start date", () => {
+    const results = [
+      result("1", "a", geoHistory.id, "2026-08-22", 900),
+      result("2", "b", geoHistory.id, "2026-08-22", 800),
+      result("3", "a", geoHistory.id, "2026-08-23", 900),
+      result("4", "b", geoHistory.id, "2026-08-23", 800),
+    ];
+
+    const before = getDailyStandings("2026-08-22", players, games, results);
+    const after = getDailyStandings("2026-08-23", players, games, results);
+
+    expect(before.find((entry) => entry.player.id === "a")?.averagePlacement).toBe(25);
+    expect(after.find((entry) => entry.player.id === "a")?.averagePlacement).toBe(20);
+  });
+
+  it("does not rank a GeoSports result dated before its scoring start date", () => {
+    const geoSports = games.find((game) => game.slug === "geosports")!;
+    const results = [
+      result("1", "a", geoSports.id, "2026-08-22", 900),
+      result("2", "b", geoSports.id, "2026-08-22", 800),
+    ];
+
+    expect(buildRankedResults(results, games)).toEqual([]);
+    const overall = getOverallStandings(players, games, results);
+    expect(overall.find((entry) => entry.player.id === "a")).toMatchObject({
+      elo: 1000,
+      gamesPlayed: 0,
+      gameWins: 0,
+    });
   });
 
   it("weights every qualifying game equally all time", () => {
