@@ -105,6 +105,25 @@ function parseGeoHistory(
   };
 }
 
+function parseGeoSports(
+  message: string,
+  receivedAt: Date,
+  timeZone: string,
+): ParsedResult {
+  if (!/\bGeoSports\b|(?:www\.)?geosports\.app/i.test(message)) {
+    throw new ParseError("GAME_MISMATCH", "The message is not a GeoSports share.");
+  }
+  const score = message.match(/^\s*([\d,]+)\s*\/\s*1,?000\s*$/im);
+  if (!score) {
+    throw new ParseError("SCORE_NOT_FOUND", "GeoSports score was not found.");
+  }
+  return {
+    gameDate: requiredDate(message, receivedAt, timeZone),
+    score: Number(score[1].replaceAll(",", "")),
+    details: {},
+  };
+}
+
 export function parseResult(
   game: GameSlug,
   rawMessage: string,
@@ -121,5 +140,7 @@ export function parseResult(
       return parseGeoEvents(message, receivedAt, timeZone);
     case "geohistory":
       return parseGeoHistory(message, receivedAt, timeZone);
+    case "geosports":
+      return parseGeoSports(message, receivedAt, timeZone);
   }
 }

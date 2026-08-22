@@ -8,6 +8,7 @@ export const games: Game[] = [
     maxScore: 1000,
     higherIsBetter: true,
     displayOrder: 1,
+    scoringStartsOn: null,
   },
   {
     id: "00000000-0000-4000-8000-000000000102",
@@ -16,6 +17,7 @@ export const games: Game[] = [
     maxScore: null,
     higherIsBetter: true,
     displayOrder: 2,
+    scoringStartsOn: null,
   },
   {
     id: "00000000-0000-4000-8000-000000000103",
@@ -24,6 +26,7 @@ export const games: Game[] = [
     maxScore: 1000,
     higherIsBetter: true,
     displayOrder: 3,
+    scoringStartsOn: null,
   },
   {
     id: "00000000-0000-4000-8000-000000000104",
@@ -32,6 +35,16 @@ export const games: Game[] = [
     maxScore: 1000,
     higherIsBetter: true,
     displayOrder: 4,
+    scoringStartsOn: null,
+  },
+  {
+    id: "00000000-0000-4000-8000-000000000105",
+    slug: "geosports",
+    displayName: "GeoSports",
+    maxScore: 1000,
+    higherIsBetter: true,
+    displayOrder: 5,
+    scoringStartsOn: "2026-08-23",
   },
 ];
 
@@ -45,6 +58,8 @@ const aliases: Record<string, GameSlug> = {
   "geo events": "geoevents",
   geohistory: "geohistory",
   "geo history": "geohistory",
+  geosports: "geosports",
+  "geo sports": "geosports",
 };
 
 export function normalizeGameSlug(value: string): GameSlug | null {
@@ -53,4 +68,8 @@ export function normalizeGameSlug(value: string): GameSlug | null {
 
 export function getGameBySlug(slug: string): Game | undefined {
   return games.find((game) => game.slug === slug);
+}
+
+export function isGameScoredOn(game: Game, date: string): boolean {
+  return game.scoringStartsOn === null || date >= game.scoringStartsOn;
 }

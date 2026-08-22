@@ -26,7 +26,7 @@ The reconciliation Shortcut should send:
 ```json
 {
   "sender": "the message sender",
-  "game": "MapTag, PricePoint, GeoEvents, or GeoHistory",
+  "game": "MapTag, PricePoint, GeoEvents, GeoHistory, or GeoSports",
   "message": "the complete message content",
   "receivedAt": "the original message date in ISO 8601 format"
 }

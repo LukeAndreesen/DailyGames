@@ -1,6 +1,6 @@
 # Daily Games Scoreboard
 
-A mobile-first live scoreboard for MapTap, PricePoint, GeoEvents, and GeoHistory results shared through an iMessage group.
+A mobile-first live scoreboard for MapTap, PricePoint, GeoEvents, GeoHistory, and GeoSports results shared through an iMessage group.
 
 ## The important architecture decision
 
