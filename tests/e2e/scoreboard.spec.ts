@@ -18,6 +18,8 @@ test("navigates between day, game, and player views", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "GeoHistory" })).toBeVisible();
   await page.getByRole("link", { name: /Alex/ }).first().click();
   await expect(page.getByRole("heading", { name: "Alex" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Elo over time" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Elo rating over time chart" })).toBeVisible();
   await page.getByRole("link", { name: /GeoHistory/ }).first().click();
   await expect(page).toHaveURL(/\/games\/geohistory$/);
 });

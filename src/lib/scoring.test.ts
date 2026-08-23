@@ -4,6 +4,7 @@ import { games } from "@/lib/games";
 import {
   buildRankedResults,
   getDailyStandings,
+  getEloHistory,
   getEloRatings,
   getGameStandings,
   getChudHighlights,
@@ -154,13 +155,33 @@ describe("placement scoring", () => {
     expect(getOverallStandings(players, games, results)[0].player.id).toBe("b");
   });
 
-  it("does not change Elo for a solo result", () => {
-    const ratings = getEloRatings(
-      players,
-      games,
-      [result("1", "a", geoHistory.id, "2026-08-16", 900)],
+  it("builds a daily Elo history from the same rating calculation", () => {
+    const results = [
+      result("1", "a", geoHistory.id, "2026-08-15", 900),
+      result("2", "b", geoHistory.id, "2026-08-15", 800),
+      result("3", "c", geoHistory.id, "2026-08-15", 700),
+      result("4", "a", geoHistory.id, "2026-08-16", 800),
+      result("5", "b", geoHistory.id, "2026-08-16", 900),
+      result("6", "c", geoHistory.id, "2026-08-16", 800),
+    ];
+    const history = getEloHistory(players, games, results);
+
+    expect(history.get("a")).toEqual([
+      { date: "2026-08-14", rating: 1000 },
+      { date: "2026-08-15", rating: 1016 },
+      { date: "2026-08-16", rating: 1007 },
+    ]);
+    expect(history.get("b")?.at(-1)?.rating).toBe(
+      Math.round(getEloRatings(players, games, results).get("b")!),
     );
+    expect(history.get("c")?.at(-1)?.rating).toBe(977);
+  });
+
+  it("does not change Elo for a solo result", () => {
+    const soloResult = [result("1", "a", geoHistory.id, "2026-08-16", 900)];
+    const ratings = getEloRatings(players, games, soloResult);
     expect(ratings.get("a")).toBe(1000);
+    expect(getEloHistory(players, games, soloResult).get("a")).toEqual([]);
   });
 
   it("finds the lowest rank score for day, calendar week, and all time", () => {

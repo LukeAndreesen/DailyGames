@@ -1,5 +1,6 @@
 import type {
   DailyStanding,
+  EloHistoryPoint,
   Game,
   GameStanding,
   ChudHighlight,
@@ -13,6 +14,11 @@ import { isGameScoredOn } from "@/lib/games";
 
 export const INITIAL_ELO = 1000;
 export const ELO_K_FACTOR = 32;
+
+type EloCalculation = {
+  ratings: Map<string, number>;
+  history: Map<string, EloHistoryPoint[]>;
+};
 
 function average(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -97,11 +103,11 @@ export function buildRankedResults(results: Result[], games: Game[]): RankedResu
  * Every player can gain or lose at most one K-factor per game, regardless of
  * how many opponents submitted a score.
  */
-export function getEloRatings(
+function calculateElo(
   players: PublicPlayer[],
   games: Game[],
   results: Result[],
-): Map<string, number> {
+): EloCalculation {
   const ratings = new Map(players.map((player) => [player.id, INITIAL_ELO]));
   const gameOrder = new Map(games.map((game) => [game.id, game.displayOrder]));
   const groups = new Map<string, RankedResult[]>();
@@ -112,16 +118,27 @@ export function getEloRatings(
     if (!ratings.has(result.playerId)) ratings.set(result.playerId, INITIAL_ELO);
   });
 
-  const rounds = [...groups.values()].sort((a, b) => {
-    const dateComparison = a[0].gameDate.localeCompare(b[0].gameDate);
-    return (
-      dateComparison ||
-      (gameOrder.get(a[0].gameId) ?? 0) - (gameOrder.get(b[0].gameId) ?? 0)
-    );
+  const rounds = [...groups.values()]
+    .filter((round) => round.length >= 2)
+    .sort((a, b) => {
+      const dateComparison = a[0].gameDate.localeCompare(b[0].gameDate);
+      return (
+        dateComparison ||
+        (gameOrder.get(a[0].gameId) ?? 0) - (gameOrder.get(b[0].gameId) ?? 0)
+      );
+    });
+
+  const history = new Map<string, EloHistoryPoint[]>(
+    [...ratings.keys()].map((playerId) => [playerId, []]),
+  );
+  if (!rounds.length) return { ratings, history };
+
+  const baselineDate = shiftDate(rounds[0][0].gameDate, -1);
+  ratings.forEach((rating, playerId) => {
+    history.set(playerId, [{ date: baselineDate, rating: Math.round(rating) }]);
   });
 
-  rounds.forEach((round) => {
-    if (round.length < 2) return;
+  rounds.forEach((round, roundIndex) => {
     const before = new Map(
       round.map((result) => [result.playerId, ratings.get(result.playerId) ?? INITIAL_ELO]),
     );
@@ -146,9 +163,44 @@ export function getEloRatings(
         rating + (ELO_K_FACTOR * matchupDelta) / (round.length - 1),
       );
     });
+
+    const date = round[0].gameDate;
+    const nextDate = rounds[roundIndex + 1]?.[0].gameDate;
+    if (date !== nextDate) {
+      ratings.forEach((rating, playerId) => {
+        history.set(playerId, [
+          ...(history.get(playerId) ?? []),
+          { date, rating: Math.round(rating) },
+        ]);
+      });
+    }
   });
 
-  return ratings;
+  return { ratings, history };
+}
+
+export function getEloRatings(
+  players: PublicPlayer[],
+  games: Game[],
+  results: Result[],
+): Map<string, number> {
+  return getEloProgression(players, games, results).ratings;
+}
+
+export function getEloHistory(
+  players: PublicPlayer[],
+  games: Game[],
+  results: Result[],
+): Map<string, EloHistoryPoint[]> {
+  return getEloProgression(players, games, results).history;
+}
+
+export function getEloProgression(
+  players: PublicPlayer[],
+  games: Game[],
+  results: Result[],
+): EloCalculation {
+  return calculateElo(players, games, results);
 }
 
 export function getDailyStandings(
@@ -195,9 +247,9 @@ export function getOverallStandings(
   players: PublicPlayer[],
   games: Game[],
   results: Result[],
+  eloRatings = getEloRatings(players, games, results),
 ): OverallStanding[] {
   const ranked = buildRankedResults(results, games);
-  const eloRatings = getEloRatings(players, games, results);
   const trackedGameDays = new Set(
     ranked.map((result) => `${result.gameId}:${result.gameDate}`),
   ).size;
