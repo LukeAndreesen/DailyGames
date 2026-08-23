@@ -69,6 +69,11 @@ export type OverallStanding = {
   rank: number | null;
 };
 
+export type EloHistoryPoint = {
+  date: string;
+  rating: number;
+};
+
 export type ChudHighlight = {
   label: "Day" | "Week" | "All time";
   player: PublicPlayer | null;

@@ -5,11 +5,13 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import type { EloHistoryPoint } from "@/lib/domain";
 
 export type TrendSeries = {
   id: string;
@@ -17,9 +19,21 @@ export type TrendSeries = {
   points: { date: string; score: number }[];
 };
 
-function Chart({ points }: { points: { date: string; score: number }[] }) {
+type ChartPoint = { date: string; value: number };
+
+function Chart({
+  points,
+  valueLabel,
+  ariaLabel,
+  baseline,
+}: {
+  points: ChartPoint[];
+  valueLabel: string;
+  ariaLabel: string;
+  baseline?: number;
+}) {
   return (
-    <div className="mt-4 h-64 w-full" aria-label="Score history chart">
+    <div className="mt-4 h-64 w-full" role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={points} margin={{ top: 8, right: 8, bottom: 4, left: -18 }}>
           <CartesianGrid stroke="var(--line)" strokeDasharray="4 4" vertical={false} />
@@ -44,12 +58,24 @@ function Chart({ points }: { points: { date: string; score: number }[] }) {
               borderRadius: "14px",
               color: "var(--ink)",
             }}
-            formatter={(value) => [new Intl.NumberFormat("en-US").format(Number(value)), "Score"]}
+            formatter={(value) => [
+              new Intl.NumberFormat("en-US").format(Number(value)),
+              valueLabel,
+            ]}
             labelFormatter={(label) => String(label)}
           />
+          {baseline === undefined ? null : (
+            <ReferenceLine
+              y={baseline}
+              stroke="var(--muted)"
+              strokeDasharray="4 4"
+              strokeOpacity={0.7}
+            />
+          )}
           <Line
             type="monotone"
-            dataKey="score"
+            dataKey="value"
+            name={valueLabel}
             stroke="var(--brand)"
             strokeWidth={3}
             dot={{ r: 4, fill: "var(--brand)" }}
@@ -90,7 +116,23 @@ export function SelectableTrendChart({
           ))}
         </select>
       </label>
-      <Chart points={active.points} />
+      <Chart
+        points={active.points.map((point) => ({ date: point.date, value: point.score }))}
+        valueLabel="Score"
+        ariaLabel={`${active.label} score history chart`}
+      />
     </div>
+  );
+}
+
+export function EloTrendChart({ points }: { points: EloHistoryPoint[] }) {
+  if (!points.length) return null;
+  return (
+    <Chart
+      points={points.map((point) => ({ date: point.date, value: point.rating }))}
+      valueLabel="Elo"
+      ariaLabel="Elo rating over time chart"
+      baseline={1000}
+    />
   );
 }

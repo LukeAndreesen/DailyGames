@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { SelectableTrendChart, type TrendSeries } from "@/components/trend-charts";
-import { Metric, PreviewBanner, SectionHeading } from "@/components/ui";
+import {
+  EloTrendChart,
+  SelectableTrendChart,
+  type TrendSeries,
+} from "@/components/trend-charts";
+import { EmptyState, Metric, PreviewBanner, SectionHeading } from "@/components/ui";
 import { loadAppData } from "@/lib/data";
-import { getGameStandings, getOverallStandings } from "@/lib/scoring";
+import { getEloProgression, getGameStandings, getOverallStandings } from "@/lib/scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +26,15 @@ export default async function PlayerPage({ params }: Props) {
   const data = await loadAppData();
   const player = data.players.find((item) => item.slug === slug);
   if (!player) notFound();
-  const overall = getOverallStandings(data.players, data.games, data.results).find(
-    (standing) => standing.player.id === player.id,
-  );
+  const eloProgression = getEloProgression(data.players, data.games, data.results);
+  const overall = getOverallStandings(
+    data.players,
+    data.games,
+    data.results,
+    eloProgression.ratings,
+  ).find((standing) => standing.player.id === player.id);
   const playerResults = data.results.filter((result) => result.playerId === player.id);
+  const eloHistory = eloProgression.history.get(player.id) ?? [];
   const gameStats = data.games.flatMap((game) => {
     const standing = getGameStandings(game, data.players, data.games, data.results).find(
       (item) => item.player.id === player.id,
@@ -59,6 +68,16 @@ export default async function PlayerPage({ params }: Props) {
         <Metric label="Participation" value={`${(overall?.participationRate ?? 0).toFixed(0)}%`} />
         <Metric label="Game wins" value={String(overall?.gameWins ?? 0)} />
       </div>
+      <section className="card p-4">
+        <SectionHeading title="Elo over time" eyebrow="Rating history" />
+        {eloHistory.length ? (
+          <EloTrendChart points={eloHistory} />
+        ) : (
+          <div className="mt-3">
+            <EmptyState>Elo history appears after the first multiplayer result.</EmptyState>
+          </div>
+        )}
+      </section>
       <section className="card p-4">
         <SectionHeading title="By game" eyebrow="Performance" />
         <div className="mt-2 divide-y divide-[var(--line)]">
