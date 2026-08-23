@@ -19,7 +19,28 @@ export type TrendSeries = {
   points: { date: string; score: number }[];
 };
 
+export type EloComparisonSeries = {
+  id: string;
+  label: string;
+  points: EloHistoryPoint[];
+};
+
 type ChartPoint = { date: string; value: number };
+
+const PLAYER_COLORS = [
+  "var(--brand)",
+  "var(--pink)",
+  "var(--cyan)",
+  "var(--lime)",
+  "var(--gold)",
+  "#3b82f6",
+  "#db2777",
+  "#0f766e",
+];
+
+function playerColor(index: number): string {
+  return PLAYER_COLORS[index] ?? `hsl(${Math.round((270 + index * 137.508) % 360)} 72% 52%)`;
+}
 
 function Chart({
   points,
@@ -134,5 +155,106 @@ export function EloTrendChart({ points }: { points: EloHistoryPoint[] }) {
       ariaLabel="Elo rating over time chart"
       baseline={1000}
     />
+  );
+}
+
+export function EloComparisonChart({ series }: { series: EloComparisonSeries[] }) {
+  const { chartData, chartSeries } = useMemo(() => {
+    const rowsByDate = new Map<string, Record<string, string | number>>();
+    const renderedSeries = series.map((item, index) => ({
+      ...item,
+      color: playerColor(index),
+      dataKey: `player_${index}`,
+    }));
+
+    renderedSeries.forEach((item) => {
+      item.points.forEach((point) => {
+        const row = rowsByDate.get(point.date) ?? { date: point.date };
+        row[item.dataKey] = point.rating;
+        rowsByDate.set(point.date, row);
+      });
+    });
+
+    return {
+      chartData: [...rowsByDate.values()].sort((a, b) =>
+        String(a.date).localeCompare(String(b.date)),
+      ),
+      chartSeries: renderedSeries,
+    };
+  }, [series]);
+
+  if (!chartSeries.length) return null;
+
+  return (
+    <div>
+      <div className="mt-4 h-80 w-full" role="img" aria-label="All players Elo over time chart">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: -18 }}>
+            <CartesianGrid stroke="var(--line)" strokeDasharray="4 4" vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickFormatter={(value: string) => value.slice(5)}
+              tick={{ fill: "var(--muted)", fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              domain={["dataMin - 10", "dataMax + 10"]}
+              tick={{ fill: "var(--muted)", fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={48}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "var(--surface-strong)",
+                border: "1px solid var(--line)",
+                borderRadius: "14px",
+                color: "var(--ink)",
+              }}
+              formatter={(value, name) => [
+                new Intl.NumberFormat("en-US").format(Number(value)),
+                String(name),
+              ]}
+              labelFormatter={(label) => String(label)}
+            />
+            <ReferenceLine
+              y={1000}
+              stroke="var(--muted)"
+              strokeDasharray="4 4"
+              strokeOpacity={0.7}
+            />
+            {chartSeries.map((item) => (
+              <Line
+                key={item.id}
+                type="monotone"
+                dataKey={item.dataKey}
+                name={item.label}
+                stroke={item.color}
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 5 }}
+                connectNulls
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <ul
+        aria-label="Player color legend"
+        className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-bold text-[var(--muted)]"
+      >
+        {chartSeries.map((item) => (
+          <li key={item.id} className="flex items-center gap-1.5">
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: item.color }}
+              aria-hidden="true"
+            />
+            {item.label}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
