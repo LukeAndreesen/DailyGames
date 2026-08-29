@@ -93,7 +93,7 @@ npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase db push
 ```
 
-### 3. Add the seven players privately
+### 3. Add the eight players privately
 
 Copy:
 
@@ -101,7 +101,7 @@ Copy:
 cp config/players.example.json config/players.local.json
 ```
 
-Replace the examples with all seven names and E.164 phone numbers, in the desired display order:
+Replace the examples with all eight names and E.164 phone numbers, in the desired display order:
 
 ```json
 [

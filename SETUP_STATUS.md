@@ -11,7 +11,7 @@ This file tracks external setup only. Never add phone numbers, database password
 - [x] Initial application pushed to GitHub `main`.
 - [x] Supabase project created: `tbfjzpittidtwfbxavnj`.
 - [x] Supabase project URL saved in the ignored local `.env.local` file.
-- [x] Seven player names and phone mappings saved in ignored `config/players.local.json`.
+- [x] Eight player names and phone mappings saved in ignored `config/players.local.json`.
 - [x] Google Apps Script relay code updated by the owner.
 - [x] iPhone Shortcuts left unchanged and still pointed at Google Apps Script.
 - [x] Project-scoped Codex MCP entry named `supabase-dailygames` configured.
@@ -24,7 +24,8 @@ This file tracks external setup only. Never add phone numbers, database password
 ## Next: Supabase
 
 - [x] Apply `supabase/migrations/20260816225618_initial_scoreboard_schema.sql` to the project.
-- [x] Seed the seven players and their private phone mappings.
+- [x] Seed the original seven players and their private phone mappings.
+- [ ] Seed Vish and his private phone mapping after the player migration is applied.
 - [x] Add the Supabase publishable key to local `.env.local`.
 - [x] Add and verify the Supabase transaction-pooler `DATABASE_URL` in local `.env.local`.
 - [x] Verify table counts, RLS, Realtime publication, and the public/private API boundary.
