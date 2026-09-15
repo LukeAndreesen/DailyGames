@@ -1,8 +1,9 @@
 "use client";
 
-import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+
+const REFRESH_INTERVAL_MS = 15_000;
 
 export function LiveResultsProvider({
   children,
@@ -16,36 +17,24 @@ export function LiveResultsProvider({
 
   useEffect(() => {
     if (!enabled) return;
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-    if (!url || !key) return;
 
     const refresh = () => {
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
       refreshTimer.current = setTimeout(() => router.refresh(), 350);
     };
-    const supabase = createClient(url, key);
-    let channel: RealtimeChannel | null = supabase
-      .channel("public-scoreboard-results")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "results" },
-        refresh,
-      )
-      .subscribe();
 
     const catchUp = () => {
       if (document.visibilityState === "visible") refresh();
     };
+    const refreshInterval = window.setInterval(catchUp, REFRESH_INTERVAL_MS);
     document.addEventListener("visibilitychange", catchUp);
     window.addEventListener("focus", catchUp);
 
     return () => {
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      window.clearInterval(refreshInterval);
       document.removeEventListener("visibilitychange", catchUp);
       window.removeEventListener("focus", catchUp);
-      if (channel) void supabase.removeChannel(channel);
-      channel = null;
     };
   }, [enabled, router]);
 
