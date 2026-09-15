@@ -1,8 +1,8 @@
 # Daily Games Scoreboard
 
-A mobile-first live scoreboard for MapTap, PricePoint, GeoEvents, GeoHistory, and GeoSports results shared through an iMessage group.
+A mobile-first scoreboard for MapTap, PricePoint, GeoEvents, GeoHistory, GeoSports, and other daily games shared through an iMessage group.
 
-## The important architecture decision
+## Architecture
 
 Do **not** point the iPhone Shortcuts directly at this Next.js application.
 
@@ -11,182 +11,115 @@ iPhone Shortcut
   → existing Google Apps Script web-app URL
       ├─→ Google Sheet raw audit log
       └─→ this app's /api/ingest endpoint
-            → Supabase
+            → Neon Postgres
             → live website
 ```
 
-Only Google Apps Script is updated. The iPhone automations keep their current URL and payload:
+Only Google Apps Script is updated. The iPhone automations keep their existing URL and payload.
 
-```json
-{
-  "sender": "+13125551234",
-  "game": "GeoHistory",
-  "message": "GeoHistory · August 16th\n868 / 1,000\n..."
-}
-```
+The browser never connects to the database. Next.js Server Components and the ingestion route use the server-only pooled `DATABASE_URL`. Live pages refresh from Neon every 15 seconds and whenever mobile Safari regains focus.
 
-## What is already implemented
+## What is implemented
 
-- Four tested share-message parsers, including appended-comment handling.
-- First-valid-score-wins idempotent ingestion.
+- Tested share-message parsers with appended-comment handling.
+- First-valid-score-wins, idempotent ingestion.
 - Normalized 0–100 rank points with split ties, ignored missing games, and excluded solo placement.
-- Multiplayer Elo ratings plus Chud of the day, trailing-week, and all-time awards.
+- Multiplayer Elo ratings plus daily, trailing-week, and all-time awards.
 - Daily, all-time, game, and player views.
-- Supabase RLS and a private schema for phones/raw messages.
-- Supabase Realtime refresh plus mobile Safari focus recovery.
-- Google Apps Script audit, forwarding, and retry relay.
-- Player seed and historical CSV import scripts.
-- An explicit preview mode that generates synthetic scores in memory, even when Supabase is configured.
+- A private PostgreSQL schema for phone mappings and raw messages.
+- Google Apps Script auditing, forwarding, and retry relay.
+- Player seeding and historical CSV import scripts.
+- A safe preview mode that generates synthetic scores in memory.
 
-## Run the preview locally
+## Run locally
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Preview is the safe default: the app uses configured player/game records when available, generates seven days of synthetic scores in memory, and never writes those scores to Supabase.
+Open [http://localhost:3000](http://localhost:3000). Preview is the default: the app uses configured player and game records when available, generates seven days of synthetic scores in memory, and never writes those scores to Neon.
 
-## External setup checklist
+## Configure Neon
 
-### 1. Create accounts
-
-Create:
-
-1. A GitHub account and private repository.
-2. A free Supabase project.
-3. A free Vercel account connected to GitHub.
-
-### 2. Configure Supabase locally
-
-Copy the environment template:
+Authenticate and link this directory to the Neon project:
 
 ```bash
-cp .env.example .env.local
+npx neon@latest auth
+npx neon@latest link
+npx neon@latest env pull --service postgres --file .env.local
 ```
 
-Fill in:
+The application uses the pooled `DATABASE_URL`. Schema migrations and database export/import operations must use the direct `DATABASE_URL_UNPOOLED` connection.
 
-```text
-NEXT_PUBLIC_SUPABASE_URL        Supabase project URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  Supabase publishable key
-DATABASE_URL                    Supabase transaction-pooler connection string
-INGEST_SECRET                   A random secret of at least 32 characters
-SCOREBOARD_DATA_MODE            preview until launch; live after cutover
-APP_TIMEZONE                    America/Chicago
-NEXT_PUBLIC_SITE_URL            http://localhost:3000 initially
-```
-
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is designed for browser use and is protected by RLS. `DATABASE_URL` and `INGEST_SECRET` are server-only and must never be committed.
-
-Generate an ingestion secret with:
+For a new empty database, apply the committed schema through Neon's direct connection:
 
 ```bash
-openssl rand -hex 32
+npx neon@latest psql production -- \
+  -X -v ON_ERROR_STOP=1 -f neon/migrations/0001_initial.sql
 ```
 
-Then authenticate and apply the migration:
+`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, and `INGEST_SECRET` are server-only and must never be committed or prefixed with `NEXT_PUBLIC_`.
 
-```bash
-npx supabase login
-npx supabase link --project-ref YOUR_PROJECT_REF
-npx supabase db push
-```
+## Add players privately
 
-### 3. Add the eight players privately
-
-Copy:
+Copy the example configuration:
 
 ```bash
 cp config/players.example.json config/players.local.json
 ```
 
-Replace the examples with all eight names and E.164 phone numbers, in the desired display order:
-
-```json
-[
-  { "displayName": "Luke", "phone": "+13125551234" },
-  { "displayName": "Friend", "phone": "+13125551235" }
-]
-```
-
-Run:
+Replace the examples with names and E.164 phone numbers in display order, then run:
 
 ```bash
 npm run seed:players
 ```
 
-The local mapping file is gitignored. Phone numbers go only into `private.player_identifiers`.
+The mapping file is gitignored. Phone numbers are stored only in `private.player_identifiers`.
 
-### 4. Test locally against Supabase
+## Deploy on Vercel
 
-```bash
-npm run dev
-```
-
-Keep `SCOREBOARD_DATA_MODE=preview` while reviewing the UI. The amber preview banner and Preview status pill must remain visible, even though the app is connected to Supabase.
-
-To test ingestion, POST a deliberately synthetic share with the same `INGEST_SECRET` using an event UUID and mapped phone number, then remove that test result and ingest event before launch.
-
-### 5. Push to GitHub and deploy on Vercel
-
-Push this repository to the private GitHub repository, then import it from the Vercel dashboard.
-
-Add every variable from `.env.example` to Vercel. Set `NEXT_PUBLIC_SITE_URL` to the production `https://…vercel.app` URL. Use the same `INGEST_SECRET` locally, in Vercel, and in Apps Script.
-
-After deployment, verify:
+Configure these variables for Production and Preview as appropriate:
 
 ```text
-https://YOUR-PROJECT.vercel.app
-https://YOUR-PROJECT.vercel.app/api/ingest
+DATABASE_URL          Neon pooled connection URL
+INGEST_SECRET         Same 64-character secret used by Google Apps Script
+SCOREBOARD_DATA_MODE  preview or live
+APP_TIMEZONE          America/Chicago
+NEXT_PUBLIC_SITE_URL  Deployed site URL
 ```
 
-The ingestion route accepts `POST` only; opening it in a browser is not a functional test.
+Do not expose a database URL as a `NEXT_PUBLIC_` variable.
 
-### 6. Update Google Apps Script—not the iPhone Shortcuts
+After deployment, verify the website and the `POST /api/ingest` flow. Opening `/api/ingest` in a browser is not a functional test because the route accepts `POST` only.
+
+## Google Apps Script
 
 Follow [`apps-script/README.md`](apps-script/README.md):
 
-1. Copy `apps-script/Code.gs` into the existing Sheet-bound Apps Script project.
-2. Add Script Properties for `SHEET_NAME`, `INGEST_URL`, and `INGEST_SECRET`.
-3. Run `setupScoreboardSheet` once.
-4. Redeploy the web app as a new version.
-5. Add a 15-minute trigger for `retryFailedRows`.
-6. Leave every iPhone Shortcut pointed at the existing Apps Script `/exec` URL.
+1. Keep the existing Sheet-bound Apps Script deployment and public `/exec` URL.
+2. Keep `INGEST_URL` pointed at `https://daily-games-m11g.vercel.app/api/ingest`.
+3. Keep `INGEST_SECRET` identical in Apps Script and Vercel.
+4. Keep the 15-minute `retryFailedRows` trigger.
 
-### 7. Import old Sheet rows, if desired
+Neither the iPhone Shortcuts nor the Apps Script URL needs to change when the database provider changes.
 
-Export the existing historical tab as CSV. The importer recognizes common headers:
+## Import historical Sheet rows
 
-```text
-Timestamp / Received At
-Sender
-Game
-Raw Message / Message / Content
-Event ID (optional)
-```
-
-Run:
+Export the historical tab as CSV, then run:
 
 ```bash
 npm run import:sheet -- /absolute/path/to/scores.csv
 ```
 
-Rows are processed chronologically so the first valid score for each player/game/date remains authoritative.
+Rows are processed chronologically so the first valid score for each player, game, and date remains authoritative.
 
-Do not import the current Sheet while it contains mock rows. Treat all pre-launch Sheet scores as synthetic.
+## Preview and live modes
 
-## Switch from preview to live
+Keep `SCOREBOARD_DATA_MODE=preview` while reviewing the UI. Immediately before a new launch, confirm the intended Neon tables and source Sheet are in the expected state, change the variable to `live`, and redeploy.
 
-Perform this cutover immediately before the scoreboard begins collecting real results:
-
-1. Clear every mock result row from the Google Sheet while preserving its header row and Apps Script configuration.
-2. Confirm `public.results` and `private.ingest_events` are empty in Supabase.
-3. Set `SCOREBOARD_DATA_MODE=live` in Vercel Production and redeploy.
-4. Confirm the amber preview banner is gone and the header says Live.
-5. Send the first real result and verify it appears once in the Sheet, Supabase, and the website.
-
-To return to a safe preview at any point, set `SCOREBOARD_DATA_MODE=preview` and redeploy. Preview scores are generated at request time, so there are no mock rows to delete from Supabase.
+To return to a safe preview at any point, set `SCOREBOARD_DATA_MODE=preview` and redeploy. Preview scores are generated at request time, so there are no mock rows to remove from Neon.
 
 ## Quality commands
 
@@ -200,7 +133,9 @@ npm run check
 
 ## Privacy model
 
-- Public browser access: player display names, games, normalized results, statistics.
-- Private database access: phone mappings and raw iMessage content.
-- Google Sheet: raw audit/recovery copy, accessible only through your Google account sharing settings.
-- Browser code never receives `DATABASE_URL`, `INGEST_SECRET`, phone numbers, or raw message text.
+- Public browser access: player display names, games, normalized results, and statistics rendered by Next.js.
+- Private database access: phone mappings and raw iMessage content, available only to server-side code.
+- Google Sheet: raw audit and recovery copy, governed by the Google account's sharing settings.
+- Browser code never receives `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `INGEST_SECRET`, phone numbers, or raw message text.
+
+The legacy `supabase/` folder is retained temporarily as rollback documentation until the old Supabase project is deliberately removed.
