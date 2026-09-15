@@ -14,18 +14,19 @@ This file tracks external setup only. Never add phone numbers, database password
 - [x] Supabase data copied to Neon: players, games, results, private phone mappings, and ingest audit events.
 - [x] Neon row counts and referential integrity verified after the copy.
 - [x] Runtime Supabase Realtime dependency replaced with periodic and focus-based refresh.
+- [x] Neon-backed Vercel Preview rendered the migrated live scoreboard and leaderboard.
+- [x] Preview `/api/ingest` accepted a synthetic event and wrote it only to Neon.
+- [x] Synthetic Neon result and ingest-event records removed after verification.
+- [x] Source and target counts rechecked immediately before cutover with no intervening writes.
+- [x] Vercel Preview and Production `DATABASE_URL` values switched to the Neon pooled URL.
+- [x] Neon-backed production deployment verified at `https://daily-games-m11g.vercel.app`.
+- [x] Temporary migration credential and migration-only Preview deployments removed.
 
-## Remaining cutover work
+## Remaining follow-up
 
-- [ ] Deploy the Neon-backed code as a protected Vercel preview.
-- [ ] Verify the preview renders live scoreboard data from Neon.
-- [ ] Send a synthetic ingestion request to the preview and verify it writes only to Neon.
-- [ ] Remove that synthetic result and ingest event from Neon.
-- [ ] Re-run the data copy immediately before production cutover to capture any intervening Supabase writes.
-- [ ] Replace Vercel Production and Preview `DATABASE_URL` with the Neon pooled URL.
-- [ ] Deploy production and verify the website plus the Apps Script ingestion path.
+- [ ] Verify the next real Apps Script event appears on the Neon-backed production site.
+- [ ] Merge the pushed `neon-migration` branch into `main` after reconciling the unavailable iCloud checkout.
 - [ ] Remove obsolete `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` variables from Vercel.
-- [ ] Remove the temporary Preview-only `NEON_DATABASE_URL` migration variable.
 
 ## Rollback and cleanup
 
